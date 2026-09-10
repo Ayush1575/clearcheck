@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ClearCheck | Misinformation Risk Scanner</title>
+
+<style>
+
+:root {
+    --paper: #f4f1e8;
+    --ink: #182d29;
+    --muted: #61716b;
+    --accent: #d7f276;
+    --white: #fffef9;
+    --border: #d1d5c9;
+
+    --low: #3d8b5f;
+    --medium: #d28a22;
+    --high: #c44935;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 90% 5%, #d7f27655, transparent 32%),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 39px,
+            #182d2905 40px
+        ),
+        var(--paper);
+
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+textarea {
+    font: inherit;
+}
+
+button,
+textarea,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+    width: min(1150px, 92%);
+    margin: auto;
+}
+
+/* HEADER */
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 22px 0;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.logo span {
+    background: var(--accent);
+    padding: 3px 7px;
+}
+
+.badge {
+    border: 1px solid var(--ink);
+    border-radius: 30px;
+
+    padding: 8px 13px;
+
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* HERO */
+
+.hero {
+    max-width: 850px;
+    padding: 65px 0 35px;
+
+    animation: appear 500ms ease-out;
+}
+
+.eyebrow {
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+h1 {
+    font-family: Georgia, serif;
+
+    font-size: clamp(45px, 7vw, 78px);
+
+    font-weight: normal;
+
+    letter-spacing: -3px;
+
+    line-height: 1.02;
+
+    margin: 18px 0;
+}
+
+h1 em {
+    background: var(--accent);
+    padding: 0 8px;
+    font-style: normal;
+}
+
+.intro {
+    max-width: 700px;
+
+    color: var(--muted);
+
+    font-size: 19px;
+
+    line-height: 1.65;
+}
+
+/* GRID */
+
+.layout {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.7fr)
+        minmax(280px, 1fr);
+
+    gap: 24px;
+
+    align-items: start;
+
+    margin-bottom: 45px;
+}
+
+/* CARDS */
+
+.card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    padding: 28px;
+
+    box-shadow:
+        0 15px 35px #182d2908;
+}
+
+h2 {
+    margin: 0 0 10px;
+
+    font-size: 24px;
+}
+
+h3 {
+    margin-top: 30px;
+}
+
+.small {
+    color: var(--muted);
+
+    font-size: 13px;
+
+    line-height: 1.65;
+}
+
+/* INPUT */
+
+label {
+    display: block;
+
+    margin: 22px 0 10px;
+
+    font-weight: bold;
+}
+
+textarea {
+    width: 100%;
+
+    min-height: 190px;
+
+    resize: vertical;
+
+    padding: 16px;
+
+    border-radius: 12px;
+
+    border: 1px solid var(--border);
+
+    background: #fafbf5;
+
+    color: var(--ink);
+
+    line-height: 1.6;
+}
+
+textarea:focus {
+    outline: 3px solid #d7f27677;
+    border-color: var(--ink);
+}
+
+/* BUTTONS */
+
+.actions {
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+    margin-top: 15px;
+}
+
+button {
+    padding: 13px 19px;
+
+    border-radius: 9px;
+
+    border: 1px solid var(--ink);
+
+    cursor: pointer;
+
+    font-weight: bold;
+}
+
+.primary {
+    background: var(--ink);
+
+    color: var(--white);
+}
+
+.secondary {
+    background: transparent;
+
+    color: var(--ink);
+}
+
+.example {
+    border: 0;
+
+    padding: 5px 0;
+
+    background: transparent;
+
+    text-decoration: underline;
+
+    color: var(--muted);
+
+    cursor: pointer;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+/* GUIDE */
+
+.guide {
+    background: var(--ink);
+
+    color: white;
+}
+
+.guide p {
+    color: #d3ded3;
+
+    line-height: 1.65;
+}
+
+.step {
+    padding: 17px 0;
+
+    border-bottom: 1px solid #ffffff25;
+}
+
+.step:last-child {
+    border-bottom: 0;
+}
+
+.step strong {
+    color: var(--accent);
+}
+
+/* RESULTS */
+
+#results {
+    margin-top: 30px;
+
+    padding-top: 28px;
+
+    border-top: 1px solid var(--border);
+}
+
+.result-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 20px;
+
+    flex-wrap: wrap;
+}
+
+/* RISK */
+
+.risk-box {
+    margin-top: 20px;
+
+    padding: 20px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    background: #fafbf5;
+}
+
+.risk-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.risk-score {
+    font-size: 38px;
+
+    font-weight: 900;
+}
+
+.risk-label {
+    font-weight: bold;
+
+    padding: 8px 12px;
+
+    border-radius: 8px;
+
+    background: var(--accent);
+}
+
+.meter {
+    width: 100%;
+
+    height: 13px;
+
+    background: #e2e5dc;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    margin-top: 15px;
+}
+
+.meter-fill {
+    height: 100%;
+
+    width: 0%;
+
+    background: var(--low);
+
+    transition: width 700ms ease;
+}
+
+/* CLAIM */
+
+.claim-box {
+    margin-top: 20px;
+
+    padding: 18px;
+
+    border-left: 5px solid var(--accent);
+
+    background: #f3f5e9;
+
+    border-radius: 8px;
+}
+
+.claim-box strong {
+    display: block;
+
+    margin-bottom: 8px;
+}
+
+/* FINDINGS */
+
+.finding {
+    padding: 15px;
+
+    margin-bottom: 10px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    background: #fff;
+}
+
+.finding-title {
+    font-weight: bold;
+
+    margin-bottom: 5px;
+}
+
+/* CHECKLIST */
+
+.checklist {
+    display: grid;
+
+    gap: 10px;
+}
+
+.check {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 12px;
+
+    border-radius: 9px;
+
+    background: #f4f5ee;
+}
+
+.check-icon {
+    font-size: 18px;
+}
+
+/* SEARCH */
+
+.search-links {
+    display: grid;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+.search-links a {
+    display: block;
+
+    padding: 13px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 9px;
+
+    color: var(--ink);
+
+    text-decoration: none;
+
+    font-weight: bold;
+
+    background: #fff;
+}
+
+.search-links a:hover {
+    background: var(--accent);
+}
+
+/* VERDICT */
+
+.verdict {
+    margin-top: 25px;
+
+    padding: 18px;
+
+    border-radius: 12px;
+
+    font-weight: bold;
+
+    line-height: 1.6;
+}
+
+/* FOOTER */
+
+footer {
+    padding: 24px 0;
+
+    border-top: 1px solid var(--border);
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    line-height: 1.6;
+}
+
+/* ANIMATION */
+
+@keyframes appear {
+
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+/* MOBILE */
+
+@media(max-width:760px) {
+
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        padding-top: 40px;
+    }
+
+    .card {
+        padding: 22px;
+    }
+
+    .badge {
+        font-size: 9px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+<header>
+
+    <div class="logo">
+        Clear<span>Check</span>.
+    </div>
+
+    <div class="badge">
+        DIGITAL MEDIA / HACKATHON
+    </div>
+
+</header>
+
+
+<main>
+
+<section class="hero">
+
+    <div class="eyebrow">
+        PAUSE • ANALYZE • VERIFY
+    </div>
+
+    <h1>
+        Before you share,
+        <br>
+        <em>look closer.</em>
+    </h1>
+
+    <p class="intro">
+        ClearCheck helps users identify misinformation warning
+        signals in headlines and social-media posts, estimate
+        risk, and investigate the claim before sharing it.
+    </p>
+
+</section>
+
+
+<div class="layout">
+
+
+<section class="card">
+
+    <h2>
+        🔍 Analyze a claim
+    </h2>
+
+    <p class="small">
+        Our prototype analyzes language patterns and verification
+        signals. It does not claim that a post is definitely true
+        or false.
+    </p>
+
+
+    <form id="check-form">
+
+        <label for="news-input">
+            Headline or social-media post
+        </label>
+
+        <textarea
+            id="news-input"
+            maxlength="5000"
+            placeholder="Paste a headline, WhatsApp message, tweet, or social-media claim..."
+            required
+        ></textarea>
+
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-top:10px;
+        ">
+
+            <button
+                type="button"
+                class="example"
+                id="example-button"
+            >
+                Try demo example
+            </button>
+
+            <span class="small" id="character-count">
+                0 / 5000
+            </span>
+
+        </div>
+
+
+        <div class="actions">
+
+            <button
+                type="submit"
+                class="primary"
+            >
+                Inspect Claim
+            </button>
+
+            <button
+                type="button"
+                class="secondary"
+                id="clear-button"
+            >
+                Clear
+            </button>
+
+        </div>
+
+    </form>
+
+
+    <!-- RESULTS -->
+
+    <section id="results" hidden>
+
+        <div class="result-header">
+
+            <div>
+
+                <div class="eyebrow">
+                    ANALYSIS COMPLETE
+                </div>
+
+                <h2>
+                    Misinformation Risk
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <!-- RISK SCORE -->
+
+        <div class="risk-box">
+
+            <div class="risk-top">
+
+                <div>
+
+                    <div class="small">
+                        Risk Score
+                    </div>
+
+                    <div
+                        class="risk-score"
+                        id="risk-score"
+                    >
+                        0/100
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="risk-label"
+                    id="risk-label"
+                >
+                    LOW RISK
+                </div>
+
+            </div>
+
+
+            <div class="meter">
+
+                <div
+                    class="meter-fill"
+                    id="meter-fill"
+                ></div>
+
+            </div>
+
+            <p
+                class="small"
+                id="risk-explanation"
+            ></p>
+
+        </div>
+
+
+        <!-- CLAIM -->
+
+        <div class="claim-box">
+
+            <strong>
+                📝 Main claim detected
+            </strong>
+
+            <span id="claim-text"></span>
+
+        </div>
+
+
+        <!-- FINDINGS -->
+
+        <h3>
+            ⚠️ Warning signals
+        </h3>
+
+        <div id="findings"></div>
+
+
+        <!-- CHECKLIST -->
+
+        <h3>
+            ✅ Verification checklist
+        </h3>
+
+        <div class="checklist">
+
+            <div class="check">
+                <span class="check-icon">🔎</span>
+                <span>
+                    Find the original source of the claim.
+                </span>
+            </div>
+
+            <div class="check">
+                <span class="check-icon">📅</span>
+                <span>
+                    Check the publication date and location.
+                </span>
+            </div>
+
+            <div class="check">
+                <span class="check-icon">📰</span>
+                <span>
+                    Compare with independent news sources.
+                </span>
+            </div>
+
+            <div class="check">
+                <span class="check-icon">📚</span>
+                <span>
+                    Look for evidence instead of relying on the headline.
+                </span>
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <h3>
+            🌐 Investigate the claim
+        </h3>
+
+        <p class="small">
+            These searches help you investigate the claim.
+            Search results are not automatically treated as proof.
+        </p>
+
+        <div
+            class="search-links"
+            id="search-links"
+        ></div>
+
+
+        <!-- VERDICT -->
+
+        <div
+            class="verdict"
+            id="verdict"
+        ></div>
+
+
+        <p class="small">
+            <strong>Important:</strong>
+            This prototype detects linguistic and contextual warning
+            signals. It does not read linked articles, verify sources,
+            analyze images/videos, or access a live fact-checking database.
+        </p>
+
+    </section>
+
+</section>
+
+
+<!-- GUIDE -->
+
+<aside class="card guide">
+
+    <div class="eyebrow">
+        THE VERIFICATION HABIT
+    </div>
+
+    <h2 style="margin-top:16px;">
+        Don't stop at the headline.
+    </h2>
+
+
+    <div class="step">
+
+        <strong>
+            01 / FIND THE ORIGINAL
+        </strong>
+
+        <p>
+            Who first published the claim?
+            Can you find the complete article,
+            report, or official statement?
+        </p>
+
+    </div>
+
+
+    <div class="step">
+
+        <strong>
+            02 / CHECK THE CONTEXT
+        </strong>
+
+        <p>
+            Check the date, location, numbers,
+            and what happened before and after.
+        </p>
+
+    </div>
+
+
+    <div class="step">
+
+        <strong>
+            03 / COMPARE SOURCES
+        </strong>
+
+        <p>
+            Look for independent reporting and
+            inspect the original evidence.
+        </p>
+
+    </div>
+
+
+    <div class="step">
+
+        <strong>
+            04 / DON'T RUSH
+        </strong>
+
+        <p>
+            Viral does not mean verified.
+            If you cannot verify it, don't present
+            it as established fact.
+        </p>
+
+    </div>
+
+
+    <div class="step">
+
+        <strong>
+            05 / THINK BEFORE SHARING
+        </strong>
+
+        <p>
+            A few seconds of verification can stop
+            misinformation from spreading further.
+        </p>
+
+    </div>
+
+</aside>
+
+
+</div>
+
+</main>
+
+
+<footer>
+
+    <strong>ClearCheck</strong> /
+    Digital Media Hackathon Prototype.
+
+    <br>
+
+    Browser-based demonstration.
+    No user text is stored by this page.
+
+</footer>
+
+</div>
+
+
+<script>
+
+/* =====================================
+   ELEMENTS
+===================================== */
+
+const form = document.getElementById("check-form");
+
+const input = document.getElementById("news-input");
+
+const counter =
+    document.getElementById("character-count");
+
+const results =
+    document.getElementById("results");
+
+const findings =
+    document.getElementById("findings");
+
+const riskScore =
+    document.getElementById("risk-score");
+
+const riskLabel =
+    document.getElementById("risk-label");
+
+const meterFill =
+    document.getElementById("meter-fill");
+
+const riskExplanation =
+    document.getElementById("risk-explanation");
+
+const claimText =
+    document.getElementById("claim-text");
+
+const searchLinks =
+    document.getElementById("search-links");
+
+const verdict =
+    document.getElementById("verdict");
+
+
+/* =====================================
+   WARNING RULES
+===================================== */
+
+const rules = [
+
+{
+    pattern:
+    /\b(shocking|unbelievable|mind-blowing|you won't believe|breaking)\b/i,
+
+    title:
+    "Sensational wording",
+
+    explanation:
+    "The message uses emotionally strong language designed to attract attention.",
+
+    points: 15
+},
+
+{
+    pattern:
+    /\b(share this now|share now|share immediately|forward this|forward to everyone|make this viral)\b/i,
+
+    title:
+    "Pressure to share",
+
+    explanation:
+    "The message encourages people to spread it quickly before verification.",
+
+    points: 20
+},
+
+{
+    pattern:
+    /\b(they don't want you to know|hidden truth|wake up|secret information|mainstream media won't tell you)\b/i,
+
+    title:
+    "Secret-knowledge framing",
+
+    explanation:
+    "The message suggests that important information is deliberately being hidden.",
+
+    points: 18
+},
+
+{
+    pattern:
+    /!{2,}/,
+
+    title:
+    "Excessive punctuation",
+
+    explanation:
+    "Repeated punctuation creates emotional emphasis without adding evidence.",
+
+    points: 8
+},
+
+{
+    pattern:
+    /\b(100% true|100% proven|guaranteed|zero risk|always|never)\b/i,
+
+    title:
+    "Absolute certainty",
+
+    explanation:
+    "Absolute claims deserve additional evidence and context.",
+
+    points: 15
+},
+
+{
+    pattern:
+    /\b(urgent|urgent warning|act now|last chance|before it's deleted)\b/i,
+
+    title:
+    "Urgency language",
+
+    explanation:
+    "Urgent wording can discourage readers from taking time to verify information.",
+
+    points: 12
+},
+
+{
+    pattern:
+    /\b(doctors hate|scientists hate|experts don't want|government doesn't want)\b/i,
+
+    title:
+    "Authority manipulation",
+
+    explanation:
+    "The message references authorities without clearly identifying evidence or sources.",
+
+    points: 15
+}
+
+];
+
+
+/* =====================================
+   INPUT COUNTER
+===================================== */
+
+input.addEventListener("input", () => {
+
+    counter.textContent =
+        input.value.length + " / 5000";
+
+    results.hidden = true;
+
+});
+
+
+/* =====================================
+   DEMO EXAMPLE
+===================================== */
+
+document
+.getElementById("example-button")
+.addEventListener("click", () => {
+
+    input.value =
+    "SHOCKING!!! Scientists don't want you to know this hidden truth. " +
+    "A new study proves that drinking this fictional drink gives you " +
+    "100% protection from every disease. Share this now before it gets deleted!!!";
+
+    counter.textContent =
+        input.value.length + " / 5000";
+
+    input.focus();
+
+});
+
+
+/* =====================================
+   CLEAR
+===================================== */
+
+document
+.getElementById("clear-button")
+.addEventListener("click", () => {
+
+    input.value = "";
+
+    counter.textContent =
+        "0 / 5000";
+
+    results.hidden = true;
+
+    input.focus();
+
+});
+
+
+/* =====================================
+   CLAIM EXTRACTION
+===================================== */
+
+function extractClaim(text) {
+
+    let clean = text
+        .replace(/\s+/g, " ")
+        .trim();
+
+    /*
+       Simple prototype approach:
+       Use first sentence as the main claim.
+    */
+
+    const sentences =
+        clean.split(/[.!?]+/);
+
+    for (let sentence of sentences) {
+
+        sentence = sentence.trim();
+
+        if (sentence.length > 25) {
+
+            return sentence;
+
+        }
+
+    }
+
+    return clean.slice(0, 250);
+
+}
+
+
+/* =====================================
+   SEARCH LINK
+===================================== */
+
+function addSearchLink(label, query) {
+
+    const link =
+        document.createElement("a");
+
+    const url =
+        new URL(
+            "https://www.google.com/search"
+        );
+
+    url.searchParams.set(
+        "q",
+        query
+    );
+
+    link.href =
+        url.toString();
+
+    link.target =
+        "_blank";
+
+    link.rel =
+        "noopener noreferrer";
+
+    link.textContent =
+        label;
+
+    searchLinks.appendChild(link);
+
+}
+
+
+/* =====================================
+   MAIN ANALYSIS
+===================================== */
+
+function analyze(text) {
+
+    let score = 0;
+
+    let matches = [];
+
+
+    /* Check rules */
+
+    for (const rule of rules) {
+
+        if (rule.pattern.test(text)) {
+
+            score += rule.points;
+
+            matches.push(rule);
+
+        }
+
+    }
+
+
+    /* Uppercase detection */
+
+    const letters =
+        text.match(/[a-z]/gi) || [];
+
+    const capitals =
+        text.match(/[A-Z]/g) || [];
+
+
+    if (
+        letters.length >= 20 &&
+        capitals.length / letters.length > 0.55
+    ) {
+
+        score += 15;
+
+        matches.push({
+
+            title:
+            "Mostly uppercase writing",
+
+            explanation:
+            "Large amounts of uppercase text are often used for emphasis and emotional impact.",
+
+            points: 15
+
+        });
+
+    }
+
+
+    /* Question manipulation */
+
+    const questions =
+        text.match(/\?/g) || [];
+
+    if (questions.length >= 3) {
+
+        score += 7;
+
+        matches.push({
+
+            title:
+            "Repeated questions",
+
+            explanation:
+            "Multiple rhetorical questions can encourage emotional reactions rather than careful evaluation.",
+
+            points: 7
+
+        });
+
+    }
+
+
+    /* Missing source */
+
+    const sourceWords =
+        /\b(source|according to|study|report|research|official|university|journal)\b/i;
+
+    if (!sourceWords.test(text)) {
+
+        score += 10;
+
+        matches.push({
+
+            title:
+            "No obvious source reference",
+
+            explanation:
+            "The text does not clearly identify a source that readers can investigate.",
+
+            points: 10
+
+        });
+
+    }
+
+
+    /* Limit score */
+
+    score =
+        Math.min(score, 100);
+
+
+    return {
+        score,
+        matches
+    };
+
+}
+
+
+/* =====================================
+   DISPLAY RESULTS
+===================================== */
+
+function displayResults(text) {
+
+    const analysis =
+        analyze(text);
+
+    const score =
+        analysis.score;
+
+    const matches =
+        analysis.matches;
+
+
+    /* Score */
+
+    riskScore.textContent =
+        score + "/100";
+
+
+    meterFill.style.width =
+        score + "%";
+
+
+    /* Risk level */
+
+    let level;
+
+    if (score < 30) {
+
+        level = "LOW RISK";
+
+        riskLabel.textContent =
+            level;
+
+        meterFill.style.background =
+            "var(--low)";
+
+        riskExplanation.textContent =
+            "Few configured warning signals were detected. This does not prove the claim is true.";
+
+        verdict.textContent =
+            "🟢 Lower warning level — still verify important claims before sharing.";
+
+        verdict.style.background =
+            "#e8f4ec";
+
+    }
+
+    else if (score < 60) {
+
+        level = "MEDIUM RISK";
+
+        riskLabel.textContent =
+            level;
+
+        meterFill.style.background =
+            "var(--medium)";
+
+        riskExplanation.textContent =
+            "Several warning signals were detected. The claim deserves additional verification.";
+
+        verdict.textContent =
+            "🟡 Caution advised — investigate the source and evidence before sharing.";
+
+        verdict.style.background =
+            "#fff2dc";
+
+    }
+
+    else {
+
+        level = "HIGH RISK";
+
+        riskLabel.textContent =
+            level;
+
+        meterFill.style.background =
+            "var(--high)";
+
+        riskExplanation.textContent =
+            "Multiple warning signals were detected. Do not treat this claim as established fact without verification.";
+
+        verdict.textContent =
+            "🔴 High warning level — verify carefully before sharing.";
+
+        verdict.style.background =
+            "#fbe8e4";
+
+    }
+
+
+    /* Claim */
+
+    claimText.textContent =
+        extractClaim(text);
+
+
+    /* Findings */
+
+    findings.replaceChildren();
+
+
+    if (matches.length === 0) {
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "finding";
+
+        div.innerHTML =
+            "<div class='finding-title'>No configured warning signals found</div>" +
+            "<div class='small'>This does NOT mean the claim is true. New misinformation can use normal-sounding language.</div>";
+
+        findings.appendChild(div);
+
+    }
+
+    else {
+
+        matches.forEach(match => {
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "finding";
+
+
+            const title =
+                document.createElement("div");
+
+            title.className =
+                "finding-title";
+
+            title.textContent =
+                "⚠️ " + match.title;
+
+
+            const explanation =
+                document.createElement("div");
+
+            explanation.className =
+                "small";
+
+            explanation.textContent =
+                match.explanation;
+
+
+            div.appendChild(title);
+
+            div.appendChild(explanation);
+
+            findings.appendChild(div);
+
+        });
+
+    }
+
+
+    /* Search */
+
+    searchLinks.replaceChildren();
+
+
+    const query =
+        text
+        .replace(/\s+/g, " ")
+        .slice(0, 180);
+
+
+    addSearchLink(
+        "🔎 Search the claim on Google",
+        query
+    );
+
+
+    addSearchLink(
+        "📰 Search Google News",
+        query
+    );
+
+
+    addSearchLink(
+        "✓ Search for fact checks",
+        query + " fact check"
+    );
+
+
+    addSearchLink(
+        "📡 Search Reuters coverage",
+        "site:reuters.com " + query
+    );
+
+
+    /* Show */
+
+    results.hidden =
+        false;
+
+
+    results.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+}
+
+
+/* =====================================
+   FORM SUBMIT
+===================================== */
+
+form.addEventListener("submit", event => {
+
+    event.preventDefault();
+
+
+    const text =
+        input.value.trim();
+
+
+    if (text.length < 20) {
+
+        alert(
+            "Please enter at least 20 characters."
+        );
+
+        input.focus();
+
+        return;
+
+    }
+
+
+    displayResults(text);
+
+});
+
+</script>
+
+</body>
+</html>
