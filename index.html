@@ -1572,10 +1572,203 @@ form.addEventListener("submit", event => {
 
 
     displayResults(text);
+    loadRelatedNews(text);
 
 });
 
 </script>
+<!-- Related News -->
+<section id="relatedNews" class="related-news" style="display:none;">
+    <div class="news-header">
+        <div>
+            <span class="news-badge">LIVE COVERAGE</span>
+            <h2>📰 What the Internet Is Saying</h2>
+            <p>Related news from multiple sources. Compare coverage before trusting a claim.</p>
+        </div>
+        <div id="newsCount" class="news-count"></div>
+    </div>
 
+    <div id="newsStatus" class="news-status">
+        Searching for related coverage...
+    </div>
+
+    <div id="newsGrid" class="news-grid"></div>
+
+    <div class="news-disclaimer">
+        ⚠️ Related coverage is a verification aid, not proof that a claim is true or false.
+    </div>
+</section>
+
+<style>
+.related-news {
+    margin-top: 30px;
+    padding: 25px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.news-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.news-badge {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    opacity: .7;
+}
+
+.news-header h2 {
+    margin: 8px 0;
+}
+
+.news-header p {
+    opacity: .7;
+    margin: 0;
+}
+
+.news-count {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.news-status {
+    margin: 22px 0;
+    opacity: .7;
+}
+
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 18px;
+}
+
+.news-card {
+    overflow: hidden;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.news-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.news-card-content {
+    padding: 16px;
+}
+
+.news-source {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: .7;
+}
+
+.news-card h3 {
+    font-size: 16px;
+    line-height: 1.4;
+    margin: 8px 0;
+}
+
+.news-card p {
+    font-size: 13px;
+    opacity: .7;
+    line-height: 1.5;
+}
+
+.news-card a {
+    display: inline-block;
+    margin-top: 8px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.news-disclaimer {
+    margin-top: 20px;
+    font-size: 12px;
+    opacity: .6;
+}
+</style>
+
+<script>
+async function loadRelatedNews(query) {
+    const section = document.getElementById("relatedNews");
+    const grid = document.getElementById("newsGrid");
+    const status = document.getElementById("newsStatus");
+    const count = document.getElementById("newsCount");
+
+    section.style.display = "block";
+    grid.innerHTML = "";
+    status.textContent = "🔎 Searching for related coverage...";
+    count.textContent = "";
+
+    try {
+        const response = await fetch(
+            "/.netlify/functions/news?q=" + encodeURIComponent(query)
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to fetch news.");
+        }
+
+        if (!data.articles || data.articles.length === 0) {
+            status.textContent = "No closely related articles were found.";
+            return;
+        }
+
+        status.textContent = "Related coverage found.";
+        count.textContent = `${data.articles.length} articles`;
+
+        data.articles.forEach(article => {
+            const card = document.createElement("article");
+            card.className = "news-card";
+
+            const image = article.image
+                ? `<img src="${article.image}" alt="">`
+                : "";
+
+            const description = article.description
+                ? article.description.substring(0, 140) + "..."
+                : "Open the article to read the full coverage.";
+
+            const date = article.publishedAt
+                ? new Date(article.publishedAt).toLocaleDateString()
+                : "";
+
+            card.innerHTML = `
+                ${image}
+                <div class="news-card-content">
+                    <div class="news-source">
+                        ${article.source || "News source"} ${date ? "• " + date : ""}
+                    </div>
+
+                    <h3>${article.title || "Related article"}</h3>
+
+                    <p>${description}</p>
+
+                    <a href="${article.url}" target="_blank" rel="noopener noreferrer">
+                        Read article →
+                    </a>
+                </div>
+            `;
+
+            grid.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error(error);
+        status.textContent =
+            "⚠️ Related news could not be loaded right now.";
+    }
+}
+</script>
 </body>
 </html>
