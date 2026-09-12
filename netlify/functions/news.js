@@ -1,7 +1,23 @@
 exports.handler = async (event) => {
   try {
-    const query = event.queryStringParameters?.q;
+    const rawQuery = event.queryStringParameters?.q || "";
 
+ const stopWords = new Set([
+  "the", "a", "an", "is", "are", "was", "were",
+  "to", "of", "in", "on", "for", "and", "or",
+  "with", "this", "that", "has", "have", "had",
+  "from", "by", "as", "at", "it", "its", "be",
+  "will", "can", "may", "new"
+]);
+
+const keywords = rawQuery
+  .replace(/[^\w\s₹$€£-]/g, " ")
+  .split(/\s+/)
+  .filter(word => word.length > 2)
+  .filter(word => !stopWords.has(word.toLowerCase()))
+  .slice(0, 8);
+
+const query = keywords.join(" ");
     if (!query) {
       return {
         statusCode: 400,
