@@ -1767,7 +1767,11 @@ if (sourceCount >= 4) {
 } else if (sourceCount >= 2) {
   coverageLevel = "Moderate coverage";
 }
+const coverageAnalysis = document.getElementById("coverageAnalysis");
 
+if (coverageAnalysis) {
+  coverageAnalysis.style.display = "block";
+}
 const coverageSources = document.getElementById("coverageSources");
 const coverageLevelEl = document.getElementById("coverageLevel");
 const coverageMessage = document.getElementById("coverageMessage");
