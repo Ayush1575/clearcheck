@@ -141,17 +141,10 @@ const scoredArticles = rawArticles.map(article => {
   };
 });
 
-const minimumMatches =
-  keywords.length <= 2 ? 1 : 2;
-
 const relevantArticles = scoredArticles
-  .filter(item =>
-    item.matchedKeywords >= minimumMatches &&
-    item.relevanceScore >= 20
-  )
-  .sort((a, b) =>
-    b.relevanceScore - a.relevanceScore
-  );
+  .filter(item => item.matchedKeywords >= 1)
+  .sort((a, b) => b.relevanceScore - a.relevanceScore)
+  .slice(0, 6);
 
     /*
       Publisher domain registry.
