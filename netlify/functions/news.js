@@ -50,7 +50,11 @@ exports.handler = async (event) => {
       };
     }
 
-    const query = keywords.join(" ");
+    const searchKeywords = keywords.slice(0, 6);
+
+const query = searchKeywords
+  .map(keyword => `"${keyword}"`)
+  .join(" OR ");
 
     const apiKey = process.env.NEWS_API_KEY;
 
