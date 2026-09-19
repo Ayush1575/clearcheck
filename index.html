@@ -829,6 +829,49 @@ footer {
 
         </div>
 
+        <!-- RISK SCORE SCALE -->
+        <div class="risk-method">
+            <h3>📊 Risk Score Scale</h3>
+            <p class="small">
+                The warning level is determined by the final score:
+            </p>
+
+            <div class="risk-method-grid">
+                <div class="risk-method-item">
+                    <strong style="color:var(--low);">🟢 LOW RISK — 0–29</strong>
+                    <span class="small">
+                        Few configured warning signals were detected.
+                    </span>
+                </div>
+
+                <div class="risk-method-item">
+                    <strong style="color:var(--medium);">🟡 MEDIUM RISK — 30–59</strong>
+                    <span class="small">
+                        Several warning signals were detected and additional verification is advised.
+                    </span>
+                </div>
+
+                <div class="risk-method-item">
+                    <strong style="color:var(--high);">🔴 HIGH RISK — 60–100</strong>
+                    <span class="small">
+                        Multiple warning signals were detected; verify the claim carefully.
+                    </span>
+                </div>
+            </div>
+
+            <div class="risk-formula">
+                0 ───────── 29 │ 30 ───────── 59 │ 60 ───────── 100<br>
+                🟢 LOW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                🟡 MEDIUM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                🔴 HIGH
+            </div>
+
+            <p class="small" style="margin-bottom:0;">
+                These ranges describe the prototype's warning levels. They do not represent
+                the probability that a claim is false.
+            </p>
+        </div>
+
         <!-- HOW RISK IS MEASURED -->
         <div class="risk-method">
             <h3>📐 How is Risk Measured?</h3>
