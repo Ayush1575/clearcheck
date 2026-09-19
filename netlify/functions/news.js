@@ -1,6 +1,5 @@
 exports.handler = async (event) => {
   try {
-    // Handle browser preflight requests
     if (event.httpMethod === "OPTIONS") {
       return {
         statusCode: 204,
@@ -25,7 +24,6 @@ exports.handler = async (event) => {
       "they", "their", "you", "your", "who", "what"
     ]);
 
-    // Extract meaningful keywords from the claim
     const keywords = rawQuery
       .replace(/[^\w\s₹$€£-]/g, " ")
       .split(/\s+/)
@@ -54,7 +52,6 @@ exports.handler = async (event) => {
 
     const query = keywords.join(" ");
 
-    // Get NewsAPI key from Netlify environment variables
     const apiKey = process.env.NEWS_API_KEY;
 
     if (!apiKey) {
@@ -70,7 +67,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // Fetch more articles so we can remove duplicates
     const url =
       `https://newsapi.org/v2/everything?` +
       `q=${encodeURIComponent(query)}` +
@@ -102,21 +98,125 @@ exports.handler = async (event) => {
     const rawArticles = data.articles || [];
 
     /*
-      Remove duplicate URLs and duplicate headlines
+      Publisher domain registry.
+
+      IMPORTANT:
+      "Verified" here means the article URL belongs to a
+      publisher/domain configured by ClearCheck.
+      It does NOT mean that the article's claim is true.
+    */
+    const trustedDomains = {
+      "Reuters": [
+        "reuters.com"
+      ],
+
+      "BBC News": [
+        "bbc.com",
+        "bbc.co.uk"
+      ],
+
+      "The Hindu": [
+        "thehindu.com"
+      ],
+
+      "The Indian Express": [
+        "indianexpress.com"
+      ],
+
+      "Hindustan Times": [
+        "hindustantimes.com"
+      ],
+
+      "NDTV": [
+        "ndtv.com"
+      ],
+
+      "The Times of India": [
+        "timesofindia.indiatimes.com"
+      ],
+
+      "India Today": [
+        "indiatoday.in"
+      ],
+
+      "CNN": [
+        "cnn.com"
+      ],
+
+      "Al Jazeera": [
+        "aljazeera.com"
+      ]
+    };
+
+    function getHostname(articleUrl) {
+      try {
+        return new URL(articleUrl).hostname
+          .toLowerCase()
+          .replace(/^www\./, "");
+      } catch {
+        return "";
+      }
+    }
+
+    function verifySource(article) {
+      const sourceName =
+        (article.source?.name || "").trim();
+
+      const hostname =
+        getHostname(article.url);
+
+      /*
+        First try matching the known publisher name.
+      */
+      const configuredDomains =
+        trustedDomains[sourceName];
+
+      if (configuredDomains) {
+        const matched = configuredDomains.some(domain =>
+          hostname === domain ||
+          hostname.endsWith("." + domain)
+        );
+
+        if (matched) {
+          return {
+            verified: true,
+            status: "VERIFIED SOURCE",
+            reason: "Publisher name and article domain match the configured source record."
+          };
+        }
+      }
+
+      /*
+        If the publisher isn't in our configured registry,
+        don't call it fake. Mark it as unknown.
+      */
+      return {
+        verified: false,
+        status: "SOURCE NOT VERIFIED",
+        reason:
+          "This publisher is not currently in ClearCheck's configured source registry."
+      };
+    }
+
+    /*
+      Remove duplicate URLs and headlines.
     */
     const seenUrls = new Set();
     const seenTitles = new Set();
 
     const uniqueArticles = rawArticles.filter(article => {
-      const urlKey = (article.url || "")
-        .trim()
-        .toLowerCase();
 
-      const titleKey = (article.title || "")
-        .toLowerCase()
-        .replace(/[^\w\s]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
+      const urlKey =
+        (article.url || "")
+          .trim()
+          .toLowerCase();
+
+      const titleKey =
+        (article.title || "")
+          .toLowerCase()
+          .replace(/[^\w\s]/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
 
       if (!urlKey && !titleKey) {
         return false;
@@ -142,8 +242,7 @@ exports.handler = async (event) => {
     });
 
     /*
-      First select one article from each different source.
-      This prevents the results from being dominated by one publisher.
+      Prefer different sources.
     */
     const selected = [];
     const usedSources = new Set();
@@ -154,6 +253,7 @@ exports.handler = async (event) => {
         (article.source?.name || "Unknown source").trim();
 
       if (!usedSources.has(sourceName)) {
+
         selected.push(article);
         usedSources.add(sourceName);
       }
@@ -164,8 +264,7 @@ exports.handler = async (event) => {
     }
 
     /*
-      If fewer than 6 different sources are available,
-      fill the remaining slots with other unique articles.
+      Fill remaining slots if necessary.
     */
     if (selected.length < 6) {
 
@@ -189,16 +288,27 @@ exports.handler = async (event) => {
     }
 
     /*
-      Return only the information needed by the frontend
+      Build final article response.
     */
-    const articles = selected.map(article => ({
-      title: article.title,
-      description: article.description,
-      source: article.source?.name,
-      url: article.url,
-      image: article.urlToImage,
-      publishedAt: article.publishedAt
-    }));
+    const articles = selected.map(article => {
+
+      const verification =
+        verifySource(article);
+
+      return {
+        title: article.title,
+        description: article.description,
+        source: article.source?.name,
+        url: article.url,
+        image: article.urlToImage,
+        publishedAt: article.publishedAt,
+
+        // Source verification information
+        sourceVerified: verification.verified,
+        sourceStatus: verification.status,
+        sourceVerificationReason: verification.reason
+      };
+    });
 
     return {
       statusCode: 200,
