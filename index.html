@@ -390,6 +390,94 @@ button:hover {
     transition: width 700ms ease;
 }
 
+/* RISK EXPLANATION */
+
+.risk-method {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.risk-method h3 {
+    margin: 0 0 8px;
+}
+
+.risk-formula {
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 9px;
+    background: #f3f5e9;
+    font-weight: bold;
+    line-height: 1.5;
+}
+
+.risk-method-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.risk-method-item {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #fafbf5;
+}
+
+.risk-method-item strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.score-breakdown {
+    margin-top: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.score-breakdown summary {
+    padding: 14px 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.score-breakdown-content {
+    padding: 0 16px 16px;
+}
+
+.score-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.score-points {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.score-total {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    font-weight: 900;
+}
+
+@media(max-width:760px) {
+    .risk-method-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* CLAIM */
 
 .claim-box {
@@ -741,6 +829,41 @@ footer {
 
         </div>
 
+        <!-- HOW RISK IS MEASURED -->
+        <div class="risk-method">
+            <h3>📐 How is Risk Measured?</h3>
+            <p class="small">
+                ClearCheck uses a transparent rule-based scoring system. Each detected
+                warning signal adds its predefined points to the score. The final score
+                is capped at 100.
+            </p>
+
+            <div class="risk-formula">
+                Risk Score = Sum of detected warning-signal points, capped at 100
+            </div>
+
+            <div class="risk-method-grid">
+                <div class="risk-method-item">
+                    <strong>📝 Language & emphasis</strong>
+                    <span class="small">
+                        Sensational wording, excessive punctuation, absolute certainty,
+                        urgency, uppercase writing and repeated questions.
+                    </span>
+                </div>
+                <div class="risk-method-item">
+                    <strong>🔎 Context & sourcing</strong>
+                    <span class="small">
+                        Pressure to share, secret-knowledge framing, authority
+                        manipulation and missing source references.
+                    </span>
+                </div>
+            </div>
+
+            <p class="small" style="margin:14px 0 0;">
+                These weights are warning-signal weights, not probabilities that a claim
+                is false. A higher score means more configured warning signals were detected.
+            </p>
+        </div>
 
         <!-- CLAIM -->
 
@@ -762,6 +885,16 @@ footer {
         </h3>
 
         <div id="findings"></div>
+
+        <details class="score-breakdown">
+            <summary>💡 Why this score?</summary>
+            <div class="score-breakdown-content">
+                <p class="small">
+                    The breakdown shows exactly which configured signals contributed points.
+                </p>
+                <div id="score-breakdown-lines"></div>
+            </div>
+        </details>
 
 
         <!-- CHECKLIST -->
@@ -914,7 +1047,22 @@ footer {
     <div class="step">
 
         <strong>
-            05 / THINK BEFORE SHARING
+            05 / UNDERSTAND THE SCORE
+        </strong>
+
+        <p>
+            Each detected warning signal has a predefined point value.
+            ClearCheck adds those points and caps the result at 100.
+            The score indicates warning signals, not whether the claim is proven false.
+        </p>
+
+    </div>
+
+
+    <div class="step">
+
+        <strong>
+            06 / THINK BEFORE SHARING
         </strong>
 
         <p>
@@ -940,7 +1088,7 @@ footer {
     <br>
 
     Browser-based demonstration.
-    No user text is stored by this page.
+    Rule-based warning scoring; no user text is stored by this page.
 
 </footer>
 
@@ -965,6 +1113,9 @@ const results =
 
 const findings =
     document.getElementById("findings");
+
+const scoreBreakdownLines =
+    document.getElementById("score-breakdown-lines");
 
 const riskScore =
     document.getElementById("risk-score");
@@ -1325,9 +1476,39 @@ function analyze(text) {
         Math.min(score, 100);
 
 
+    const languageTitles = new Set([
+        "Sensational wording",
+        "Excessive punctuation",
+        "Absolute certainty",
+        "Urgency language",
+        "Mostly uppercase writing",
+        "Repeated questions"
+    ]);
+
+    const contextTitles = new Set([
+        "Pressure to share",
+        "Secret-knowledge framing",
+        "Authority manipulation",
+        "No obvious source reference"
+    ]);
+
+    const languagePoints = matches
+        .filter(match => languageTitles.has(match.title))
+        .reduce((sum, match) => sum + match.points, 0);
+
+    const contextPoints = matches
+        .filter(match => contextTitles.has(match.title))
+        .reduce((sum, match) => sum + match.points, 0);
+
+    const rawScore = matches
+        .reduce((sum, match) => sum + match.points, 0);
+
     return {
         score,
-        matches
+        matches,
+        languagePoints,
+        contextPoints,
+        rawScore
     };
 
 }
@@ -1347,6 +1528,15 @@ function displayResults(text) {
 
     const matches =
         analysis.matches;
+
+    const languagePoints =
+        analysis.languagePoints;
+
+    const contextPoints =
+        analysis.contextPoints;
+
+    const rawScore =
+        analysis.rawScore;
 
 
     /* Score */
@@ -1472,7 +1662,7 @@ function displayResults(text) {
                 "finding-title";
 
             title.textContent =
-                "⚠️ " + match.title;
+                "⚠️ " + match.title + " (+" + match.points + ")";
 
 
             const explanation =
@@ -1493,6 +1683,73 @@ function displayResults(text) {
 
         });
 
+    }
+
+
+    /* Score breakdown */
+
+    if (scoreBreakdownLines) {
+        scoreBreakdownLines.replaceChildren();
+
+        if (matches.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "small";
+            empty.textContent =
+                "No configured signals contributed points, so the current score is 0/100.";
+            scoreBreakdownLines.appendChild(empty);
+        } else {
+            matches.forEach(match => {
+                const line = document.createElement("div");
+                line.className = "score-line";
+
+                const name = document.createElement("span");
+                name.textContent = match.title;
+
+                const points = document.createElement("span");
+                points.className = "score-points";
+                points.textContent = "+" + match.points;
+
+                line.appendChild(name);
+                line.appendChild(points);
+                scoreBreakdownLines.appendChild(line);
+            });
+
+            const languageLine = document.createElement("div");
+            languageLine.className = "score-line";
+            languageLine.innerHTML =
+                "<span>Language & emphasis subtotal</span><span class='score-points'>" +
+                languagePoints + "</span>";
+            scoreBreakdownLines.appendChild(languageLine);
+
+            const contextLine = document.createElement("div");
+            contextLine.className = "score-line";
+            contextLine.innerHTML =
+                "<span>Context & sourcing subtotal</span><span class='score-points'>" +
+                contextPoints + "</span>";
+            scoreBreakdownLines.appendChild(contextLine);
+
+            const total = document.createElement("div");
+            total.className = "score-total";
+
+            const totalLabel = document.createElement("span");
+            totalLabel.textContent = "Raw points → displayed score";
+
+            const totalValue = document.createElement("span");
+            totalValue.textContent = rawScore + " → " + score + "/100";
+
+            total.appendChild(totalLabel);
+            total.appendChild(totalValue);
+            scoreBreakdownLines.appendChild(total);
+
+            if (rawScore > 100) {
+                const capNote = document.createElement("p");
+                capNote.className = "small";
+                capNote.style.marginBottom = "0";
+                capNote.textContent =
+                    "The raw points exceeded 100, so the displayed score was capped at 100.";
+                scoreBreakdownLines.appendChild(capNote);
+            }
+        }
     }
 
 
