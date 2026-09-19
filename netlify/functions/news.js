@@ -50,7 +50,7 @@ exports.handler = async (event) => {
       };
     }
 
-    const searchKeywords = keywords.slice(0, 6);
+    const searchKeywords = keywords.slice(0, 5);
 
 const query = searchKeywords
   .map(keyword => `"${keyword}"`)
@@ -100,6 +100,58 @@ const query = searchKeywords
     }
 
     const rawArticles = data.articles || [];
+    function normalizeText(value) {
+  return (value || "")
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+const scoredArticles = rawArticles.map(article => {
+  const titleWords = normalizeText(article.title);
+  const descriptionWords = normalizeText(article.description);
+
+  const articleWords = new Set([
+    ...titleWords,
+    ...descriptionWords
+  ]);
+
+  let matchedKeywords = 0;
+  let titleMatches = 0;
+
+  for (const keyword of keywords) {
+    if (articleWords.has(keyword)) {
+      matchedKeywords++;
+    }
+
+    if (titleWords.includes(keyword)) {
+      titleMatches++;
+    }
+  }
+
+  const relevanceScore =
+    matchedKeywords * 10 +
+    titleMatches * 15;
+
+  return {
+    article,
+    matchedKeywords,
+    relevanceScore
+  };
+});
+
+const minimumMatches =
+  keywords.length <= 2 ? 1 : 2;
+
+const relevantArticles = scoredArticles
+  .filter(item =>
+    item.matchedKeywords >= minimumMatches &&
+    item.relevanceScore >= 20
+  )
+  .sort((a, b) =>
+    b.relevanceScore - a.relevanceScore
+  );
 
     /*
       Publisher domain registry.
@@ -205,11 +257,10 @@ const query = searchKeywords
     /*
       Remove duplicate URLs and headlines.
     */
-    const seenUrls = new Set();
-    const seenTitles = new Set();
+   const seenUrls = new Set();
+const seenTitles = new Set();
 
-    const uniqueArticles = rawArticles.filter(article => {
-
+const uniqueArticles = relevantArticles.map(item => item.article).filter(article => {
       const urlKey =
         (article.url || "")
           .trim()
