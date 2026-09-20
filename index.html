@@ -2036,7 +2036,45 @@ loadRelatedNews(text);
         Compare multiple sources before trusting the claim.
     </p>
 </div>
+<!-- ML EVIDENCE ANALYSIS -->
+<div
+    id="evidenceAnalysis"
+    style="
+        display:none;
+        margin-top:20px;
+        padding:18px;
+        border-radius:14px;
+        border:1px solid var(--border);
+        background:#f7f9fb;
+    "
+>
+    <div style="
+        font-size:12px;
+        font-weight:700;
+        letter-spacing:1px;
+    ">
+        🤖 ML EVIDENCE ANALYSIS
+    </div>
 
+    <h3 style="margin:8px 0;">
+        Compare the claim with related coverage
+    </h3>
+
+    <div
+        id="evidenceSummary"
+        class="small"
+        style="margin-bottom:15px;"
+    >
+        Analyzing related articles...
+    </div>
+
+    <div id="evidenceList"></div>
+
+    <p class="small" style="margin-top:15px;">
+        ⚠️ These are ML-generated evidence signals. They do not prove
+        that a claim is true or false.
+    </p>
+</div>
     <div id="newsGrid" class="news-grid"></div>
 
     <div class="news-disclaimer">
@@ -2254,6 +2292,186 @@ data.articles.forEach(article => {
         console.error(error);
         status.textContent =
             "⚠️ Related news could not be loaded right now.";
+    }
+}
+/* =====================================
+   ML EVIDENCE ANALYSIS
+===================================== */
+
+async function analyzeEvidence(claim, articles) {
+
+    const box =
+        document.getElementById("evidenceAnalysis");
+
+    const summary =
+        document.getElementById("evidenceSummary");
+
+    const list =
+        document.getElementById("evidenceList");
+
+    if (!box || !summary || !list) {
+        return;
+    }
+
+    box.style.display = "block";
+
+    summary.textContent =
+        "🤖 Comparing the claim with related articles...";
+
+    list.replaceChildren();
+
+    try {
+
+        const selectedArticles =
+            articles.slice(0, 4).map(article => ({
+                title: article.title || "",
+                description: article.description || "",
+                source: article.source || "",
+                url: article.url || ""
+            }));
+
+        const response = await fetch(
+            "/.netlify/functions/evidence?claim=" +
+            encodeURIComponent(claim) +
+            "&articles=" +
+            encodeURIComponent(
+                JSON.stringify(selectedArticles)
+            )
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || "Evidence analysis failed."
+            );
+        }
+
+        const evidence =
+            data.evidence || [];
+
+        if (evidence.length === 0) {
+
+            summary.textContent =
+                "No usable evidence was available for ML comparison.";
+
+            return;
+        }
+
+        const supporting =
+            data.summary?.supporting || 0;
+
+        const contradicting =
+            data.summary?.contradicting || 0;
+
+        const unclear =
+            data.summary?.unclear || 0;
+
+        summary.textContent =
+            `${supporting} supporting • ` +
+            `${contradicting} contradicting • ` +
+            `${unclear} unclear`;
+
+        evidence.forEach(item => {
+
+            const card =
+                document.createElement("div");
+
+            card.style.cssText = `
+                padding:14px;
+                margin-top:10px;
+                border:1px solid var(--border);
+                border-radius:10px;
+                background:#fff;
+            `;
+
+            const title =
+                document.createElement("strong");
+
+            title.textContent =
+                item.title || "Related article";
+
+            const source =
+                document.createElement("div");
+
+            source.className = "small";
+
+            source.textContent =
+                item.source || "Unknown source";
+
+            const signal =
+                document.createElement("div");
+
+            signal.style.marginTop = "8px";
+            signal.style.fontWeight = "700";
+
+            if (item.signal === "SUPPORTS") {
+
+                signal.textContent =
+                    "🟢 ML signal: SUPPORTS";
+
+            } else if (
+                item.signal === "CONTRADICTS"
+            ) {
+
+                signal.textContent =
+                    "🔴 ML signal: CONTRADICTS";
+
+            } else {
+
+                signal.textContent =
+                    "🟡 ML signal: UNCLEAR";
+
+            }
+
+            const confidence =
+                document.createElement("div");
+
+            confidence.className = "small";
+
+            confidence.textContent =
+                "Model score: " +
+                (item.confidence ?? 0) +
+                "%";
+
+            card.appendChild(title);
+            card.appendChild(source);
+            card.appendChild(signal);
+            card.appendChild(confidence);
+
+            if (item.url) {
+
+                const link =
+                    document.createElement("a");
+
+                link.href = item.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+
+                link.textContent =
+                    "Read article →";
+
+                link.style.display = "inline-block";
+                link.style.marginTop = "8px";
+
+                card.appendChild(link);
+            }
+
+            list.appendChild(card);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Evidence analysis error:",
+            error
+        );
+
+        summary.textContent =
+            "⚠️ ML evidence analysis is currently unavailable.";
+
     }
 }
 </script>
