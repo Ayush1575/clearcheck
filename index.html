@@ -1001,8 +1001,39 @@ footer {
         <div
             class="verdict"
             id="verdict"
-        ></div>
+        ></div><!-- ML ANALYSIS -->
+<div
+    id="ml-analysis"
+    style="
+        margin-top:20px;
+        padding:18px;
+        border-radius:14px;
+        border:1px solid var(--border);
+        background:#f7f9fb;
+        display:none;
+    "
+>
+    <div style="font-size:12px;font-weight:700;letter-spacing:1px;">
+        ML / NLP ANALYSIS
+    </div>
 
+    <h3 id="ml-assessment" style="margin:8px 0;">
+        Analyzing...
+    </h3>
+
+    <p id="ml-confidence" class="small">
+        Model confidence: —
+    </p>
+
+    <p id="ml-model" class="small">
+        Model: —
+    </p>
+
+    <p class="small">
+        ⚠️ This model output is a classification signal, not proof
+        that a claim is true or false.
+    </p>
+</div>
 
         <p class="small">
             <strong>Important:</strong>
@@ -1843,7 +1874,96 @@ function displayResults(text) {
     });
 
 }
+/* =====================================
+   ML ANALYSIS
+===================================== */
 
+async function analyzeWithML(claim) {
+
+    const box =
+        document.getElementById("ml-analysis");
+
+    const assessment =
+        document.getElementById("ml-assessment");
+
+    const confidence =
+        document.getElementById("ml-confidence");
+
+    const model =
+        document.getElementById("ml-model");
+
+
+    box.style.display = "block";
+
+    assessment.textContent =
+        "🤖 Analyzing with ML model...";
+
+    confidence.textContent =
+        "Model confidence: calculating...";
+
+    model.textContent =
+        "Model: facebook/bart-large-mnli";
+
+
+    try {
+
+        const response = await fetch(
+            "/.netlify/functions/analyze?q=" +
+            encodeURIComponent(claim)
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "ML analysis failed."
+            );
+
+        }
+
+
+        assessment.textContent =
+            data.assessment || "UNVERIFIED";
+
+
+        confidence.textContent =
+            "Model confidence: " +
+            (data.confidence ?? 0) +
+            "%";
+
+
+        model.textContent =
+            "Model: " +
+            (data.model ||
+            "facebook/bart-large-mnli");
+
+
+    } catch (error) {
+
+        console.error(
+            "ML analysis error:",
+            error
+        );
+
+
+        assessment.textContent =
+            "ML analysis unavailable";
+
+
+        confidence.textContent =
+            "The claim can still be checked using the other ClearCheck tools.";
+
+
+        model.textContent =
+            "Model: unavailable";
+
+    }
+}
 
 /* =====================================
    FORM SUBMIT
@@ -1872,8 +1992,8 @@ form.addEventListener("submit", event => {
 
 
     displayResults(text);
-    loadRelatedNews(text);
-
+analyzeWithML(text);
+loadRelatedNews(text);
 });
 
 </script>
